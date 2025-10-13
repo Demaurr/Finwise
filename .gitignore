@@ -16,3 +16,5 @@ theme/static_src/
 
 .DS_Store
 Thumbs.db
+
+.env
