@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-8 bg-gray-100 min-h-screen">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-semibold text-gray-800">Welcome to FinWise Dashboard</h1>
+    <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">Logout</button>
+  </div>
+
+  <!-- Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white shadow-md rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-2">Total Income</h3>
+      <p id="income" class="text-2xl font-bold text-green-600">$0</p>
+    </div>
+    <div class="bg-white shadow-md rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-2">Total Expenses</h3>
+      <p id="expenses" class="text-2xl font-bold text-red-500">$0</p>
+    </div>
+    <div class="bg-white shadow-md rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-2">Savings Rate</h3>
+      <p id="savings" class="text-2xl font-bold text-blue-600">0%</p>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="bg-white rounded-xl shadow p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">Financial Overview</h2>
+    <canvas id="financeChart"></canvas>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h3 class="text-xl font-semibold mb-2">Recent Transactions</h3>
+    <table class="w-full text-left border">
+      <thead>
+        <tr>
+          <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Category</th>
+          <th class="px-4 py-2 border-b">Amount</th>
+          <th class="px-4 py-2 border-b">Description</th>
+        </tr>
+      </thead>
+      <tbody id="transactionsTable">
+        <tr><td colspan="4" class="px-4 py-2 text-center">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const accessToken = localStorage.getItem("access");
+
+  if (!accessToken) {
+    window.location.href = "/users/login/";
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    localStorage.clear();
+    window.location.href = '/users/login/';
+  });
+
+  async function loadTransactions() {
+    try {
+      const response = await fetch("/api/core/transactions/", {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) throw new Error("Unauthorized or failed to fetch.");
+
+      const data = await response.json();
+      const tbody = document.getElementById("transactionsTable");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-2 text-center">No transactions yet.</td></tr>`;
+      } else {
+        data.forEach(tx => {
+          tbody.innerHTML += `
+            <tr>
+              <td class="px-4 py-2 border-b">${tx.date}</td>
+              <td class="px-4 py-2 border-b">${tx.category}</td>
+              <td class="px-4 py-2 border-b">${tx.amount}</td>
+              <td class="px-4 py-2 border-b">${tx.notes}</td>
+            </tr>
+          `;
+        });
+      }
+    } catch (error) {
+      console.error("Error loading transactions:", error);
+    }
+  }
+
+  loadTransactions();
+
+  async function loadDashboard() {
+    try {
+      const res = await fetch("/api/core/dashboard-data/", {
+        headers: { "Authorization": `Bearer ${accessToken}` }
+      });
+
+      if (!res.ok) throw new Error("Unauthorized");
+
+      const data = await res.json();
+
+      // Update cards
+      document.getElementById("income").textContent = `$${data.total_income.toFixed(2)}`;
+      document.getElementById("expenses").textContent = `$${data.total_expense.toFixed(2)}`;
+      document.getElementById("savings").textContent = `${data.savings_rate}%`;
+
+      // Update table
+      const tbody = document.getElementById("transactionsTable");
+      tbody.innerHTML = "";
+      if (data.transactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-2">No transactions yet.</td></tr>`;
+      } else {
+        data.transactions.forEach(tx => {
+          tbody.innerHTML += `
+            <tr>
+              <td class="px-4 py-2 border-b">${tx.date}</td>
+              <td class="px-4 py-2 border-b">${tx.category}</td>
+              <td class="px-4 py-2 border-b">${tx.amount}</td>
+              <td class="px-4 py-2 border-b">${tx.notes}</td>
+            </tr>`;
+        });
+      }
+
+      // Chart Example
+      const ctx = document.getElementById("financeChart");
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ["Income", "Expenses"],
+          datasets: [{
+            label: "Financial Overview",
+            data: [data.total_income, data.total_expense],
+            backgroundColor: ["#16a34a", "#dc2626"]
+          }]
+        },
+        options: { responsive: true }
+      });
+
+    } catch (err) {
+      console.error("Error loading dashboard:", err);
+      localStorage.clear();
+      window.location.href = "/users/login/";
+    }
+  }
+
+  loadDashboard();
+</script>
+{% endblock %}
