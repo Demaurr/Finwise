@@ -1,6 +1,6 @@
 # Python
 __pycache__/
-migrations/*
+*/migrations/*
 *.py[cod]
 *.sqlite3
 *.log
