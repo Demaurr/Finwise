@@ -21,3 +21,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+    
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'username', 'first_name', 'last_name',
+            'full_name', 'email', 'location',
+            'date_joined', 'last_login', 'is_staff',
+        ]
+        read_only_fields = ['date_joined', 'last_login', 'is_staff']
+
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip()
+

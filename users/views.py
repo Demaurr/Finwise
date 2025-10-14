@@ -1,18 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .serializers import RegisterSerializer
-from rest_framework import generics, permissions, status
+from .serializers import RegisterSerializer, UserProfileSerializer
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
-from django.contrib.auth import logout
-from .serializers import RegisterSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
 from .utils.user_utils import update_user_location_if_missing
+from django.contrib.auth.models import update_last_login
+from django.contrib.auth import logout
+from .models import UserProfile
+from .serializers import UserProfileSerializer
+from .permissions import IsOwnerOrAdmin
+from rest_framework.decorators import action
 
 
 class RegisterView(generics.CreateAPIView):
@@ -40,6 +41,7 @@ class LoginAPIView(TokenObtainPairView):
                     from .models import UserProfile
                     user = UserProfile.objects.get(id=user_id)
                     update_user_location_if_missing(request, user)
+                    update_last_login(None, user)
                 except Exception:
                     pass
         return response
@@ -51,6 +53,48 @@ class LogoutAPIView(APIView):
     def post(self, request):
         logout(request)
         return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing user profiles.
+    - Regular users can view & edit only their own profile.
+    - Admins can view, edit, or delete any user.
+    """
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return UserProfile.objects.all()
+        return UserProfile.objects.filter(id=user.id)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Allow `/api/users/me/` endpoint"""
+        if kwargs.get("pk") == "me":
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data)
+        return super().retrieve(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        """Handle user self-deletion safely"""
+        if self.request.user == instance:
+            logout(self.request)
+        instance.delete()
+
+    @action(detail=False, methods=['get', 'patch'], url_path='me')
+    def me(self, request):
+        """Get or update current user's profile"""
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data)
+        elif request.method == 'PATCH':
+            serializer = self.get_serializer(request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
 
 def register_page(request):
     return render(request, 'users/register.html')
@@ -73,3 +117,6 @@ def login_page(request):
 def logout_view(request):
     logout(request)
     return redirect('login_page')
+
+def profile(request):
+    return render(request, "users/profile.html")
