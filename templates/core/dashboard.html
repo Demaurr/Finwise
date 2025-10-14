@@ -1,153 +1,226 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="p-8 bg-gray-100 min-h-screen">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-semibold text-gray-800">Welcome to FinWise Dashboard</h1>
-    <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">Logout</button>
+<div class="p-8 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800">FinWise Dashboard</h1>
+      <p class="text-gray-500">Comprehensive financial insights based on your data</p>
+    </div>
+    <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+      Logout
+    </button>
   </div>
 
-  <!-- Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white shadow-md rounded-xl p-6">
-      <h3 class="text-lg font-semibold mb-2">Total Income</h3>
-      <p id="income" class="text-2xl font-bold text-green-600">$0</p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white shadow-sm rounded-2xl p-6 border-t-4 border-green-500 hover:shadow-md transition">
+      <h3 class="text-sm font-semibold text-gray-500 mb-2">Total Income</h3>
+      <p id="income" class="text-3xl font-bold text-green-600">$0</p>
     </div>
-    <div class="bg-white shadow-md rounded-xl p-6">
-      <h3 class="text-lg font-semibold mb-2">Total Expenses</h3>
-      <p id="expenses" class="text-2xl font-bold text-red-500">$0</p>
+    <div class="bg-white shadow-sm rounded-2xl p-6 border-t-4 border-red-500 hover:shadow-md transition">
+      <h3 class="text-sm font-semibold text-gray-500 mb-2">Total Expenses</h3>
+      <p id="expenses" class="text-3xl font-bold text-red-500">$0</p>
     </div>
-    <div class="bg-white shadow-md rounded-xl p-6">
-      <h3 class="text-lg font-semibold mb-2">Savings Rate</h3>
-      <p id="savings" class="text-2xl font-bold text-blue-600">0%</p>
+    <div class="bg-white shadow-sm rounded-2xl p-6 border-t-4 border-blue-500 hover:shadow-md transition">
+      <h3 class="text-sm font-semibold text-gray-500 mb-2">Net Savings</h3>
+      <p id="netSavings" class="text-3xl font-bold text-blue-600">$0</p>
+    </div>
+    <div class="bg-white shadow-sm rounded-2xl p-6 border-t-4 border-purple-500 hover:shadow-md transition">
+      <h3 class="text-sm font-semibold text-gray-500 mb-2">Savings Rate</h3>
+      <p id="savingsRate" class="text-3xl font-bold text-purple-600">0%</p>
     </div>
   </div>
 
-  <!-- Chart -->
-  <div class="bg-white rounded-xl shadow p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Financial Overview</h2>
-    <canvas id="financeChart"></canvas>
+  <div class="bg-white rounded-2xl shadow p-6 mb-10">
+    <h2 class="text-lg font-semibold mb-4 text-gray-700">Insights Summary</h2>
+    <div id="insightsList" class="space-y-3 text-gray-700">
+      <p class="text-gray-500">Loading insights...</p>
+    </div>
   </div>
 
-  <!-- Transactions Table -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <h3 class="text-xl font-semibold mb-2">Recent Transactions</h3>
-    <table class="w-full text-left border">
-      <thead>
-        <tr>
-          <th class="px-4 py-2 border-b">Date</th>
-          <th class="px-4 py-2 border-b">Category</th>
-          <th class="px-4 py-2 border-b">Amount</th>
-          <th class="px-4 py-2 border-b">Description</th>
-        </tr>
-      </thead>
-      <tbody id="transactionsTable">
-        <tr><td colspan="4" class="px-4 py-2 text-center">Loading...</td></tr>
-      </tbody>
-    </table>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-700">Monthly Trend (You vs Region)</h2>
+      <canvas id="trendChart" height="180"></canvas>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-700">Category Spending Comparison</h2>
+      <div class="relative h-72">
+        <canvas id="doubleDonut"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow p-6 mb-10">
+    <h2 class="text-lg font-semibold mb-4 text-gray-700">Overall Regional Comparison</h2>
+    <canvas id="regionChart" height="160"></canvas>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow p-6">
+    <h2 class="text-lg font-semibold mb-4 text-gray-700">Goal Progress</h2>
+    <div id="goalSection" class="space-y-4">
+      <p class="text-gray-500">Loading your goals...</p>
+    </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/double-donut.js' %}"></script>
+
 <script>
   const accessToken = localStorage.getItem("access");
+  if (!accessToken) window.location.href = "/users/login/";
 
-  if (!accessToken) {
-    window.location.href = "/users/login/";
-  }
-
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
+  document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.clear();
     window.location.href = '/users/login/';
   });
 
-  async function loadTransactions() {
-    try {
-      const response = await fetch("/api/core/transactions/", {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      });
-
-      if (!response.ok) throw new Error("Unauthorized or failed to fetch.");
-
-      const data = await response.json();
-      const tbody = document.getElementById("transactionsTable");
-      tbody.innerHTML = "";
-
-      if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-2 text-center">No transactions yet.</td></tr>`;
-      } else {
-        data.forEach(tx => {
-          tbody.innerHTML += `
-            <tr>
-              <td class="px-4 py-2 border-b">${tx.date}</td>
-              <td class="px-4 py-2 border-b">${tx.category}</td>
-              <td class="px-4 py-2 border-b">${tx.amount}</td>
-              <td class="px-4 py-2 border-b">${tx.notes}</td>
-            </tr>
-          `;
-        });
-      }
-    } catch (error) {
-      console.error("Error loading transactions:", error);
-    }
-  }
-
-  loadTransactions();
-
   async function loadDashboard() {
     try {
-      const res = await fetch("/api/core/dashboard-data/", {
+      const res = await fetch("/api/core/analytics/", {
         headers: { "Authorization": `Bearer ${accessToken}` }
       });
-
-      if (!res.ok) throw new Error("Unauthorized");
+      if (!res.ok) throw new Error("Failed to fetch analytics");
 
       const data = await res.json();
+      const personal = data.personal;
+      const comparison = data.comparison;
+      const insights = data.insights;
 
-      // Update cards
-      document.getElementById("income").textContent = `$${data.total_income.toFixed(2)}`;
-      document.getElementById("expenses").textContent = `$${data.total_expense.toFixed(2)}`;
-      document.getElementById("savings").textContent = `${data.savings_rate}%`;
+      document.getElementById("income").textContent = `$${personal.total_income.toFixed(2)}`;
+      document.getElementById("expenses").textContent = `$${personal.total_expense.toFixed(2)}`;
+      document.getElementById("netSavings").textContent = `$${personal.net_savings.toFixed(2)}`;
+      document.getElementById("savingsRate").textContent = `${personal.savings_rate.toFixed(1)}%`;
 
-      // Update table
-      const tbody = document.getElementById("transactionsTable");
-      tbody.innerHTML = "";
-      if (data.transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-2">No transactions yet.</td></tr>`;
-      } else {
-        data.transactions.forEach(tx => {
-          tbody.innerHTML += `
-            <tr>
-              <td class="px-4 py-2 border-b">${tx.date}</td>
-              <td class="px-4 py-2 border-b">${tx.category}</td>
-              <td class="px-4 py-2 border-b">${tx.amount}</td>
-              <td class="px-4 py-2 border-b">${tx.notes}</td>
-            </tr>`;
-        });
-      }
-
-      // Chart Example
-      const ctx = document.getElementById("financeChart");
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ["Income", "Expenses"],
-          datasets: [{
-            label: "Financial Overview",
-            data: [data.total_income, data.total_expense],
-            backgroundColor: ["#16a34a", "#dc2626"]
-          }]
-        },
-        options: { responsive: true }
-      });
+      renderCharts(personal, comparison);
+      renderGoals(personal.goal_progress);
+      renderInsights(insights);
 
     } catch (err) {
       console.error("Error loading dashboard:", err);
       localStorage.clear();
       window.location.href = "/users/login/";
     }
+  }
+
+  function renderInsights(insights) {
+    const container = document.getElementById("insightsList");
+    container.innerHTML = "";
+    if (!insights || !insights.length) {
+      container.innerHTML = `<p class="text-gray-500">No insights available yet.</p>`;
+      return;
+    }
+    insights.forEach(text => {
+      container.innerHTML += `
+        <div class="p-3 bg-gray-50 border-l-4 border-blue-500 rounded-md shadow-sm animate-fade-in">
+          ${text}
+        </div>`;
+    });
+  }
+
+  function renderCharts(personal, comparison) {
+    const months = personal.monthly_trend.map(m => `Month ${m.date__month}`);
+    const income = personal.monthly_trend.map(m => m.income || 0);
+    const expense = personal.monthly_trend.map(m => m.expense || 0);
+
+    const regionAvgIncome = comparison?.region_monthly_avg?.map(m => m.avg_income || 0) || [];
+    const regionAvgExpense = comparison?.region_monthly_avg?.map(m => m.avg_expense || 0) || [];
+
+    const trendCtx = document.getElementById("trendChart").getContext("2d");
+    new Chart(trendCtx, {
+      type: "line",
+      data: {
+        labels: months,
+        datasets: [
+          { label: "Your Income", data: income, borderColor: "#16a34a", tension: 0.3, fill: false },
+          { label: "Your Expenses", data: expense, borderColor: "#dc2626", tension: 0.3, fill: false },
+          { label: "Region Avg Income", data: regionAvgIncome, borderColor: "#86efac", borderDash: [5, 5], tension: 0.3, fill: false },
+          { label: "Region Avg Expense", data: regionAvgExpense, borderColor: "#fca5a5", borderDash: [5, 5], tension: 0.3, fill: false },
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    if (comparison && comparison.region_category_avg) {
+      const userLabels = personal.category_spending.map(c => c.category);
+      const userData = personal.category_spending.map(c => c.total);
+      const regionMap = {};
+      comparison.region_category_avg.forEach(c => regionMap[c.category] = c.avg_spent);
+      const regionData = userLabels.map(c => regionMap[c] || 0);
+
+      const colors = [
+        'rgba(54, 162, 235, 0.85)',
+        'rgba(255, 99, 132, 0.85)',
+        'rgba(75, 192, 192, 0.85)',
+        'rgba(255, 205, 86, 0.85)',
+        'rgba(153, 102, 255, 0.85)',
+        'rgba(201, 203, 207, 0.85)'
+      ];
+
+      updateChart({
+        inner: {
+          label: "You",
+          labels: userLabels,
+          data: userData,
+          colors: colors.slice(0, userLabels.length)
+        },
+        outer: {
+          label: "Region Avg",
+          labels: userLabels,
+          data: regionData,
+          colors: colors.slice(0, userLabels.length).map(c => c.replace("0.85", "0.5"))
+        }
+      });
+    }
+
+    if (comparison) {
+      const regionCtx = document.getElementById("regionChart").getContext("2d");
+      new Chart(regionCtx, {
+        type: "bar",
+        data: {
+          labels: ["Income", "Expenses"],
+          datasets: [
+            { label: "You", data: [comparison.user_income, comparison.user_expense], backgroundColor: "#3b82f6" },
+            { label: "Regional Avg", data: [comparison.region_avg_income, comparison.region_avg_expense], backgroundColor: "#f59e0b" }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+  }
+
+  function renderGoals(goals) {
+    const container = document.getElementById("goalSection");
+    container.innerHTML = "";
+    if (!goals.length) {
+      container.innerHTML = `<p class="text-gray-500">No goals found. Add one to start tracking!</p>`;
+      return;
+    }
+
+    goals.forEach(goal => {
+      container.innerHTML += `
+        <div class="p-4 bg-gray-50 rounded-xl border">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-semibold text-gray-700">${goal.title}</span>
+            <span class="text-sm text-gray-500">${goal.progress.toFixed(1)}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-blue-500 h-3 rounded-full transition-all duration-700" style="width: ${goal.progress}%;"></div>
+          </div>
+          <p class="text-sm text-gray-500 mt-1">Saved $${goal.current.toFixed(2)} of $${goal.target.toFixed(2)}</p>
+        </div>`;
+    });
   }
 
   loadDashboard();

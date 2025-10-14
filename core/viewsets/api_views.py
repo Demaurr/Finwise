@@ -7,6 +7,16 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from core.processing.analytics import analyze_user_finances, full_user_analytics
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def analytics_data(request):
+    user = request.user
+    # data = analyze_user_finances(user)
+    data = full_user_analytics(user)
+    return Response(data)
+
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated]
