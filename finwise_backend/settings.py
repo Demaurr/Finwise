@@ -35,7 +35,7 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["finwise-gaz4.onrender.com", "localhost", "127.0.0.1"]
 
 AUTH_USER_MODEL = 'users.UserProfile'
 
