@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import CommunityPost, Comment, Like
 from core.serializers import FinancialGoalSerializer, TransactionSerializer
 from core.models import FinancialGoal, Transaction
+from users.utils.user_utils import calculate_user_savings
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -52,7 +53,25 @@ class CommunityPostSerializer(serializers.ModelSerializer):
         ]
 
     def get_author(self, obj):
-        return {"id": obj.author.id, "username": obj.author.username}
+        user = obj.author
+        total_savings = calculate_user_savings(user)
+
+        if total_savings >= 60:
+            rating = "Expert Saver"
+        elif total_savings >= 30:
+            rating = "Pro Saver"
+        elif total_savings >= 15:
+            rating = "Growing Saver"
+        elif total_savings > 0:
+            rating = "New Saver"
+        else:
+            rating = "Getting Started"
+
+        return {
+            "id": user.id,
+            "username": user.username,
+            "savings_rating": rating,
+        }
 
     def get_likes_count(self, obj):
         return obj.likes.count()
