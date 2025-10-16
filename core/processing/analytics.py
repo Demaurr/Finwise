@@ -103,9 +103,11 @@ def generate_insights(personal_data, comparison_data=None):
     insights = []
 
     if personal_data['savings_rate'] >= 30:
-        insights.append("💰 Excellent savings rate — you’re saving over 30% of your income.")
-    elif personal_data['savings_rate'] < 10:
+        insights.append("💰 Excellent savings rate — you're saving over 30% of your income.")
+    elif personal_data['savings_rate'] > 10:
         insights.append("⚠️ Your savings rate is low — consider reducing discretionary expenses.")
+    elif personal_data['savings_rate'] < 0:
+        insights.append("⚠️ Warning!!! You are spending more than you earnings....")
 
     if personal_data['category_spending']:
         top_category = max(personal_data['category_spending'], key=lambda x: x['total'])
@@ -118,15 +120,15 @@ def generate_insights(personal_data, comparison_data=None):
             insights.append("📊 Your income is below your city average — consider ways to grow earnings.")
 
         if personal_data['total_expense'] > comparison_data['region_avg_expense'] * 1.2:
-            insights.append("⚠️ You’re spending more than most in your region — review expense habits.")
+            insights.append("⚠️ You're spending more than most in your region — review expense habits.")
         elif personal_data['total_expense'] < comparison_data['region_avg_expense'] * 0.8:
-            insights.append("✅ You’re spending less than average — efficient budgeting!")
+            insights.append("✅ You're spending less than average — efficient budgeting!")
 
     for goal in personal_data['goal_progress']:
         if goal['progress'] >= 90:
-            insights.append(f"🎯 You’re about to reach your goal: {goal['title']}!")
+            insights.append(f"🎯 You're about to reach your goal: {goal['title']}!")
         elif goal['progress'] < 25:
-            insights.append(f"🚀 You’re just starting on {goal['title']} — stay consistent!")
+            insights.append(f"🚀 You're just starting on {goal['title']} — stay consistent!")
 
     return insights
 

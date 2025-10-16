@@ -25,6 +25,10 @@
     <div id="profileInfo">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
+          <p class="text-gray-500 text-sm">Username</p>
+          <p id="username" class="text-lg font-semibold text-gray-800">Loading...</p>
+        </div>
+        <div>
           <p class="text-gray-500 text-sm">Full Name</p>
           <p id="profileName" class="text-lg font-semibold text-gray-800">Loading...</p>
         </div>
@@ -70,7 +74,6 @@
     </form>
   </div>
 
-  <!-- Goals -->
   <div class="bg-white shadow rounded-2xl p-6 mb-10">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-semibold text-gray-700">Your Financial Goals</h2>
@@ -79,7 +82,6 @@
     <div id="goalsContainer" class="space-y-4"><p class="text-gray-500">Loading goals...</p></div>
   </div>
 
-  <!-- Transactions -->
   <div class="bg-white shadow rounded-2xl p-6">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-semibold text-gray-700">Recent Transactions</h2>
@@ -120,7 +122,8 @@ async function loadProfile() {
   const data = await res.json();
 
   currentUserId = data.id;
-  document.getElementById("profileName").textContent = `${data.first_name || ""} ${data.last_name || ""}`.trim() || data.username;
+  document.getElementById("username").textContent = `${data.username || ""}`.trim();
+  document.getElementById("profileName").textContent = `${data.first_name || ""} ${data.last_name || ""}`.trim();
   document.getElementById("profileEmail").textContent = data.email || "N/A";
   document.getElementById("profileRegion").textContent = data.location?.region || data.location?.country || "Not set";
   document.getElementById("profileJoined").textContent = new Date(data.date_joined).toLocaleDateString();
