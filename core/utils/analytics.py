@@ -136,7 +136,7 @@ def generate_insights(personal_data, comparison_data=None):
         top_category = max(personal_data['category_spending'], key=lambda x: x['total'])
         insights.append(f"🧾 Your highest spending category is {top_category['category']} (${top_category['total']:.2f}).")
 
-    if comparison_data:
+    if comparison_data and personal_data['total_income'] > 0:
         if personal_data['total_income'] > comparison_data['region_avg_income'] * 1.1:
             insights.append("🌟 Your income is above your city average — strong financial position.")
         elif personal_data['total_income'] < comparison_data['region_avg_income'] * 0.9:

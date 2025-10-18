@@ -144,7 +144,7 @@ async function loadProfile() {
   document.getElementById("username").textContent = `${data.username || ""}`.trim();
   document.getElementById("profileName").textContent = `${data.first_name || ""} ${data.last_name || ""}`.trim();
   document.getElementById("profileEmail").textContent = data.email || "N/A";
-  document.getElementById("profileRegion").textContent = data.location?.region || data.location?.country || "Not set";
+  document.getElementById("profileRegion").textContent = data.location?.country || data.location?.region || "Not set";
   document.getElementById("profileJoined").textContent = new Date(data.date_joined).toLocaleDateString();
   document.getElementById("profileLastLogin").textContent = data.last_login ? new Date(data.last_login).toLocaleString() : "Never";
 

@@ -1,47 +1,47 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white shadow p-6 rounded-xl mt-10">
-  <h2 class="text-2xl font-semibold mb-4">Manage Financial Goals</h2>
+<div class="max-w-6xl mx-auto bg-white shadow-lg rounded-2xl mt-10 p-8">
+  <h2 class="text-3xl font-semibold mb-8 text-center text-gray-800">Manage Financial Goals</h2>
 
-  <form id="goalForm" class="space-y-4">
-    <input type="hidden" id="goal_id">
-
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
     <div>
-      <label class="block text-sm font-medium">Title</label>
-      <input type="text" id="title" class="w-full border rounded px-3 py-2" required>
+      <form id="goalForm" class="space-y-5">
+        <input type="hidden" id="goal_id">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Title</label>
+          <input type="text" id="title" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" placeholder="e.g. Buy a new car" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Target Amount</label>
+            <input type="number" id="target_amount" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" step="0.01" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Current Amount</label>
+            <input type="number" id="current_amount" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" step="0.01" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Deadline</label>
+          <input type="date" id="deadline" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 focus:border-green-400">
+        </div>
+
+        <div class="flex gap-3">
+          <button type="submit" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Save Goal</button>
+          <button type="button" id="resetBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Reset</button>
+        </div>
+      </form>
+
+      <p id="message" class="mt-4 text-center text-sm"></p>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium">Target Amount</label>
-        <input type="number" id="target_amount" class="w-full border rounded px-3 py-2" step="0.01" required>
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Current Amount</label>
-        <input type="number" id="current_amount" class="w-full border rounded px-3 py-2" step="0.01" required>
-      </div>
+    <div class="bg-gray-50 p-5 rounded-xl shadow-inner overflow-y-auto max-h-[450px]">
+      <h3 class="text-xl font-semibold mb-4 text-gray-800">Your Goals</h3>
+      <ul id="goalList" class="divide-y divide-gray-200"></ul>
     </div>
-
-    <div>
-      <label class="block text-sm font-medium">Deadline</label>
-      <input type="date" id="deadline" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="flex gap-2">
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-        Save Goal
-      </button>
-      <button type="button" id="resetBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-        Reset
-      </button>
-    </div>
-  </form>
-
-  <p id="message" class="mt-4 text-center text-sm"></p>
-
-  <div class="mt-8">
-    <h3 class="text-xl font-semibold mb-2">Your Goals</h3>
-    <ul id="goalList" class="divide-y divide-gray-200"></ul>
   </div>
 </div>
 
@@ -55,16 +55,27 @@ async function fetchGoals() {
   const data = await res.json();
   const list = document.getElementById('goalList');
   list.innerHTML = '';
+
+  if (!data.length) {
+    list.innerHTML = `<li class="text-center text-gray-500 py-3">No goals found yet.</li>`;
+    return;
+  }
+
   data.forEach(goal => {
+    const progress = goal.progress?.toFixed(1) || 0;
+    const percent = Math.min(progress, 100);
     list.innerHTML += `
-      <li class="py-2 flex justify-between items-center">
-        <div>
-          <p class="font-semibold">${goal.title}</p>
-          <p class="text-sm text-gray-600">$${goal.current_amount} / $${goal.target_amount} (${goal.progress?.toFixed(1) || 0}%)</p>
+      <li class="py-4 flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <p class="font-semibold text-gray-800">${goal.title}</p>
+          <div class="flex gap-3">
+            <button onclick="editGoal(${goal.id})" class="text-blue-600 hover:underline">Edit</button>
+            <button onclick="deleteGoal(${goal.id})" class="text-red-600 hover:underline">Delete</button>
+          </div>
         </div>
-        <div class="flex gap-2">
-          <button onclick="editGoal(${goal.id})" class="text-blue-600 hover:underline">Edit</button>
-          <button onclick="deleteGoal(${goal.id})" class="text-red-600 hover:underline">Delete</button>
+        <p class="text-sm text-gray-600">$${goal.current_amount} / $${goal.target_amount} (${progress}%)</p>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div class="bg-green-500 h-2.5 rounded-full" style="width: ${percent}%;"></div>
         </div>
       </li>`;
   });
@@ -81,6 +92,7 @@ async function editGoal(id) {
 }
 
 async function deleteGoal(id) {
+  if (!confirm("Are you sure you want to delete this goal?")) return;
   await fetch(`${apiUrl}${id}/`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${access}` }
@@ -107,8 +119,14 @@ document.getElementById('goalForm').addEventListener('submit', async e => {
     body: JSON.stringify(data)
   });
 
-  document.getElementById('message').textContent = res.ok ? "Saved successfully!" : "Error saving goal.";
-  document.getElementById('message').className = res.ok ? "text-green-600 text-center" : "text-red-600 text-center";
+  const msg = document.getElementById('message');
+  if (res.ok) {
+    msg.textContent = "Goal saved successfully!";
+    msg.className = "text-green-600 text-center";
+  } else {
+    msg.textContent = "Error saving goal.";
+    msg.className = "text-red-600 text-center";
+  }
 
   document.getElementById('goalForm').reset();
   document.getElementById('goal_id').value = '';

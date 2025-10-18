@@ -110,7 +110,7 @@
     const container = document.getElementById("insightsList");
     container.innerHTML = "";
     if (!insights || !insights.length) {
-      container.innerHTML = `<p class="text-gray-500">No insights available yet.</p>`;
+      container.innerHTML = `<p class="text-gray-500">No insights available yet. Go to <a href="/users/profile/" class="text-blue-600 hover:text-blue-800 underline">profile</a> to add transactions or goals.</p>`;
       return;
     }
     insights.forEach(text => {

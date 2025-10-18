@@ -2,59 +2,83 @@
 {% load static %}
 
 {% block content %}
-<div class="flex min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-  <aside class="w-64 bg-white shadow-md p-6 border-r border-gray-200">
+<div class="flex flex-col md:flex-row items-start min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  <!-- Mobile top bar -->
+  <div class="w-full md:hidden bg-white shadow p-4 flex justify-between items-center border-b border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-800">Community</h2>
+    <button id="menuToggle" class="p-2 rounded-lg border border-gray-300 hover:bg-gray-100">
+      ☰
+    </button>
+  </div>
+
+  <aside id="sidebar"
+       class="w-64 bg-white shadow-md p-6 border-r border-gray-200 self-start md:block hidden h-auto md:sticky md:top-4 rounded-xl">
     <h2 class="text-xl font-semibold text-gray-800 mb-6">Community</h2>
     <nav class="space-y-3">
-      <button id="showAllBtn" 
+      <button id="showAllBtn"
         class="sidebar-btn w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 transition text-gray-700 font-medium active">
-        🏠 All Posts
+        All Posts
       </button>
-      <button id="showYourBtn" 
+      <button id="showYourBtn"
         class="sidebar-btn w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 transition text-gray-700 font-medium">
-        ✍️ Your Posts
+        Your Posts
       </button>
-      <button id="showLikedBtn" 
+      <button id="showLikedBtn"
         class="sidebar-btn w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 transition text-gray-700 font-medium">
-        ❤️ Liked Posts
+        Liked Posts
       </button>
     </nav>
   </aside>
 
-  <main class="flex-1 p-8">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">Community Space</h1>
-      <p class="text-gray-500">Share your progress and learn from others</p>
+  <main class="flex-1 p-4 sm:p-6 md:p-8 mt-16 md:mt-0">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 text-center sm:text-left">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Community Space</h1>
+      <p class="text-gray-500 text-sm sm:text-base mt-2 sm:mt-0">
+        Share your progress and learn from others
+      </p>
     </div>
 
-    <div class="bg-white shadow-md rounded-2xl p-6 mb-10">
-      <h2 class="text-lg font-semibold text-gray-700 mb-3">Share your thoughts</h2>
-      <textarea id="postContent" rows="3" placeholder="What's on your mind?" 
-        class="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
+    <div
+      class="bg-white shadow-lg rounded-2xl p-4 sm:p-6 mb-10 border border-gray-100 hover:shadow-xl transition-all duration-300">
+      <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div class="flex-1">
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Create a new post</h2>
+          <textarea id="postContent" rows="3"
+            placeholder="Share your thoughts, progress, or insights..."
+            class="w-full border border-gray-200 rounded-xl p-3 sm:p-4 text-gray-700 focus:ring-2 focus:ring-blue-300 focus:outline-none resize-none"></textarea>
 
-      <div class="flex justify-between items-center mt-3">
-        <div class="flex items-center gap-3">
-          <select id="linkedType" class="border rounded-lg px-3 py-2 text-sm text-gray-600">
-            <option value="">Attach...</option>
-            <option value="goal">Goal</option>
-            <option value="transaction">Transaction</option>
-          </select>
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center mt-4 gap-3 flex-wrap">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+              <select id="linkedType"
+                class="border border-gray-300 rounded-xl px-4 py-2 text-sm text-gray-700 bg-gray-50 hover:bg-white transition w-full sm:w-auto">
+                <option value="">📎 Attach...</option>
+                <option value="goal">🎯 Goal</option>
+                <option value="transaction">💰 Transaction</option>
+              </select>
 
-          <select id="linkedSelect" class="border rounded-lg px-3 py-2 text-sm text-gray-600 hidden w-48">
-            <option value="">Select one...</option>
-          </select>
+              <select id="linkedSelect"
+                class="border border-gray-300 rounded-xl px-4 py-2 text-sm text-gray-700 hidden bg-gray-50 hover:bg-white transition w-full sm:w-52">
+                <option value="">Select one...</option>
+              </select>
+            </div>
+
+            <button id="createPostBtn"
+              class="flex items-center justify-center gap-2 bg-blue-600 text-white font-medium px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md w-full sm:w-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Post
+            </button>
+          </div>
         </div>
-
-        <button id="createPostBtn" 
-          class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">
-          Share
-        </button>
       </div>
     </div>
 
-    <div id="communityFeed" class="space-y-6">
-    </div>
+    <!-- Posts Feed -->
+    <div id="communityFeed" class="space-y-6"></div>
 
+    <!-- Pagination -->
     <div id="paginationControls" class="flex justify-center items-center gap-3 mt-8"></div>
   </main>
 </div>
@@ -72,6 +96,15 @@ async function getCurrentUser() {
   const res = await fetch('/api/users/me/', { headers: { Authorization: `Bearer ${token}` } });
   if (res.ok) currentUser = await res.json();
 }
+
+const sidebar = document.getElementById("sidebar");
+// const toggleBtn = document.getElementById("menuToggle");
+
+// if (toggleBtn) {
+//   toggleBtn.addEventListener("click", () => {
+//     sidebar.classList.toggle("-translate-x-full");
+//   });
+// }
 
 const linkedType = document.getElementById("linkedType");
 const linkedSelect = document.getElementById("linkedSelect");
@@ -184,12 +217,12 @@ function renderPosts(posts) {
 
       ${post.goal ? `
         <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-3 text-sm text-blue-800">
-          🎯 Shared Goal: <strong>${post.goal.title}</strong> — Target: $${post.goal.target_amount}
+          🎯 Goal: <strong>${post.goal.title}</strong> — Target: $${post.goal.target_amount}
         </div>` : ''}
 
       ${post.transaction ? `
         <div class="bg-green-50 border border-green-100 rounded-lg p-3 mb-3 text-sm text-green-800">
-          💰 Shared Transaction: ${post.transaction.category} — $${post.transaction.amount}
+          💰 Transaction: ${post.transaction.category} — $${post.transaction.amount}
         </div>` : ''}
 
       <div class="flex items-center justify-between">
@@ -338,6 +371,7 @@ document.getElementById("showLikedBtn").addEventListener("click", () => {
 
 (async () => {
   await getCurrentUser();
+  setActive("showAllBtn");
   loadPosts();
 })();
 </script>
