@@ -53,8 +53,9 @@
     </div>
 
     <div id="communityFeed" class="space-y-6">
-      <p class="text-gray-500">Loading posts...</p>
     </div>
+
+    <div id="paginationControls" class="flex justify-center items-center gap-3 mt-8"></div>
   </main>
 </div>
 
@@ -64,6 +65,8 @@ if (!token) window.location.href = '/users/login/';
 
 let currentUser = null;
 let currentFilter = "all";
+let nextPage = null;
+let prevPage = null;
 
 async function getCurrentUser() {
   const res = await fetch('/api/users/me/', { headers: { Authorization: `Bearer ${token}` } });
@@ -103,10 +106,13 @@ document.getElementById("createPostBtn").addEventListener("click", async () => {
 
   if (!content) return alert("Post content cannot be empty.");
 
+  if (content.trim().length < 5) {
+    alert("Post content must be at least 5 characters long.");
+    return;
+  }
+
   const body = { content };
   if (type && selectedId) body[`shared_${type}`] = selectedId;
-
-  console.log(body)
 
   const res = await fetch("/api/community/posts/", {
     method: "POST",
@@ -124,22 +130,28 @@ document.getElementById("createPostBtn").addEventListener("click", async () => {
   }
 });
 
-async function loadPosts() {
-  let url = "/api/community/posts/";
-  if (currentFilter === "your") url = "/api/community/posts/mine/";
-  else if (currentFilter === "liked") url = "/api/community/posts/liked/";
+async function loadPosts(url = null) {
+  let baseUrl = "/api/community/posts/";
+  if (currentFilter === "your") baseUrl = "/api/community/posts/mine/";
+  else if (currentFilter === "liked") baseUrl = "/api/community/posts/liked/";
+  const finalUrl = url || baseUrl;
 
   const feed = document.getElementById("communityFeed");
   feed.innerHTML = `<p class="text-gray-500">Loading posts...</p>`;
 
-  const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+  const res = await fetch(finalUrl, { headers: { "Authorization": `Bearer ${token}` } });
   if (!res.ok) {
     feed.innerHTML = `<p class="text-red-500">Error loading posts.</p>`;
     return;
   }
 
-  const posts = await res.json();
+  const data = await res.json();
+  const posts = data.results || data;
+  nextPage = data.next;
+  prevPage = data.previous;
+  showSkeletons();
   renderPosts(posts);
+  renderPagination();
 }
 
 function renderPosts(posts) {
@@ -153,7 +165,10 @@ function renderPosts(posts) {
 
   posts.forEach(post => {
     const div = document.createElement("div");
-    div.className = "bg-white p-6 rounded-2xl shadow hover:shadow-lg transition";
+    div.className = `
+      bg-white p-6 rounded-2xl shadow-md hover:shadow-xl
+      transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.01]
+    `;
 
     div.innerHTML = `
       <div class="flex justify-between items-center mb-2">
@@ -201,6 +216,45 @@ function renderPosts(posts) {
     `;
     feed.appendChild(div);
   });
+}
+
+function showSkeletons(count = 6) {
+  const feed = document.getElementById("communityFeed");
+  feed.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const skeleton = document.createElement("div");
+    skeleton.className = `
+      bg-white rounded-2xl p-6 shadow border border-gray-100
+      animate-pulse space-y-3
+    `;
+    skeleton.innerHTML = `
+      <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+      <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+      <div class="h-3 bg-gray-200 rounded w-full"></div>
+      <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+    `;
+    feed.appendChild(skeleton);
+  }
+}
+
+function renderPagination() {
+  const controls = document.getElementById("paginationControls");
+  controls.innerHTML = "";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "< Previous";
+  prevBtn.className = "px-4 py-2 rounded-lg border bg-white shadow hover:bg-gray-100 disabled:opacity-40";
+  prevBtn.disabled = !prevPage;
+  prevBtn.onclick = () => loadPosts(prevPage);
+
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "Next >";
+  nextBtn.className = "px-4 py-2 rounded-lg border bg-white shadow hover:bg-gray-100 disabled:opacity-40";
+  nextBtn.disabled = !nextPage;
+  nextBtn.onclick = () => loadPosts(nextPage);
+
+  controls.appendChild(prevBtn);
+  controls.appendChild(nextBtn);
 }
 
 async function toggleComments(postId) {

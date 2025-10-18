@@ -1,15 +1,26 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import CommunityPost, Comment, Like
+from .models import CommunityPost, Like
 from .serializers import CommunityPostSerializer, CommentSerializer
 from .permissions import IsAuthorOrReadOnly
 from django.shortcuts import render
 
+from rest_framework.pagination import PageNumberPagination
+
+class CommunityPostPagination(PageNumberPagination):
+    page_size = 20
+
 class CommunityPostViewSet(viewsets.ModelViewSet):
-    queryset = CommunityPost.objects.all().order_by('-created_at')
+    queryset = (
+        CommunityPost.objects
+        .select_related('author', 'shared_goal', 'shared_transaction')
+        .prefetch_related('comments', 'likes')
+        .order_by('-created_at')
+    )
     serializer_class = CommunityPostSerializer
     permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
+    pagination_class = CommunityPostPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
