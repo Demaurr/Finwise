@@ -7,7 +7,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from core.processing.analytics import analyze_user_finances, full_user_analytics
+from core.utils.analytics import analyze_user_finances, full_user_analytics
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -38,15 +39,23 @@ class FinancialGoalViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def dashboard_data(request):
     user = request.user
-    transactions = Transaction.objects.filter(user=user).order_by('-date')[:10]
+    
+    analytics = full_user_analytics(user)
 
-    total_income = Transaction.objects.filter(user=user, type='income').aggregate(total=Sum('amount'))['total'] or 0
-    total_expense = Transaction.objects.filter(user=user, type='expense').aggregate(total=Sum('amount'))['total'] or 0
-    savings_rate = 0 if total_income == 0 else round((total_income - total_expense) / total_income * 100, 2)
+    transactions = Transaction.objects.filter(user=user).order_by('-date')[:10]
+    total_income = analytics['personal']['total_income']
+    total_expense = analytics['personal']['total_expense']
+    savings_rate = analytics['personal']['savings_rate']
+    insights = analytics['insights']
+
+    comparison = analytics.get('comparison', {})
+    region_savings_rate = comparison.get('region_savings_rate')
+    print(region_savings_rate)
 
     data = {
         "total_income": total_income,
@@ -60,6 +69,13 @@ def dashboard_data(request):
                 "description": tx.notes or ""
             }
             for tx in transactions
-        ]
+        ],
+        "insights": insights,
+        "comparison": {
+            "region_avg_income": comparison.get("region_avg_income"),
+            "region_avg_expense": comparison.get("region_avg_expense"),
+            "region_savings_rate": region_savings_rate,
+            "region": comparison.get("region"),
+        }
     }
     return Response(data)

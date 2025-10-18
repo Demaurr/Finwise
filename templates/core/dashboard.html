@@ -122,7 +122,22 @@
   }
 
   function renderCharts(personal, comparison) {
-    const months = personal.monthly_trend.map(m => `Month ${m.date__month}`);
+    const monthNames = {
+      1: "Jan",
+      2: "Feb",
+      3: "Mar",
+      4: "Apr",
+      5: "May",
+      6: "Jun",
+      7: "Jul",
+      8: "Aug",
+      9: "Sep",
+      10: "Oct",
+      11: "Nov",
+      12: "Dec"
+    };
+
+    const months = Array.from({ length: 12 }, (_, i) => monthNames[i + 1]);
     const income = personal.monthly_trend.map(m => m.income || 0);
     const expense = personal.monthly_trend.map(m => m.expense || 0);
 

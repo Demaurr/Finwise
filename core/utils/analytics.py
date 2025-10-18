@@ -1,5 +1,6 @@
 from django.db.models import Sum, Avg, Q
 from core.models import Transaction, FinancialGoal
+from core.utils.worldbank import get_country_indicator
 from datetime import timedelta, date
 
 
@@ -19,16 +20,25 @@ def analyze_user_finances(user):
         .order_by('-total')
     )
 
-    last_6_months = date.today() - timedelta(days=180)
-    monthly_data = (
-        transactions.filter(date__gte=last_6_months)
+    last_12_months = date.today() - timedelta(days=360)
+    raw_monthly = (
+        transactions.filter(date__gte=last_12_months)
         .values('date__month')
         .annotate(
             income=Sum('amount', filter=Q(type='income')),
             expense=Sum('amount', filter=Q(type='expense')),
         )
-        .order_by('date__month')
     )
+
+    month_map = {m['date__month']: m for m in raw_monthly}
+
+    monthly_data = []
+    for m in range(1, 13):
+        monthly_data.append({
+            'date__month': m,
+            'income': float(month_map.get(m, {}).get('income') or 0),
+            'expense': float(month_map.get(m, {}).get('expense') or 0),
+        })
 
     goal_progress = [
         {
@@ -44,7 +54,7 @@ def analyze_user_finances(user):
         'total_income': float(total_income),
         'total_expense': float(total_expense),
         'net_savings': float(net_savings),
-        'savings_rate': savings_rate,
+        'savings_rate': float(savings_rate),
         'category_spending': list(category_spending),
         'monthly_trend': list(monthly_data),
         'goal_progress': goal_progress,
@@ -68,16 +78,24 @@ def compare_with_region(user):
     region_expense = region_transactions.filter(type='expense').aggregate(total=Sum('amount'))['total'] or 0
     region_user_count = region_users.count() or 1
 
-    last_6_months = date.today() - timedelta(days=180)
-    region_monthly_avg = (
-        region_transactions.filter(date__gte=last_6_months)
+    last_12_months = date.today() - timedelta(days=360)
+    raw_region = (
+        region_transactions.filter(date__gte=last_12_months)
         .values('date__month')
         .annotate(
             avg_income=Avg('amount', filter=Q(type='income')),
             avg_expense=Avg('amount', filter=Q(type='expense')),
         )
-        .order_by('date__month')
     )
+
+    region_map = {m['date__month']: m for m in raw_region}
+    region_monthly_avg = []
+    for m in range(1, 13):
+        region_monthly_avg.append({
+            'date__month': m,
+            'avg_income': float(region_map.get(m, {}).get('avg_income') or 0),
+            'avg_expense': float(region_map.get(m, {}).get('avg_expense') or 0),
+        })
 
     region_category_avg = (
         region_transactions.filter(type='expense')
@@ -95,6 +113,11 @@ def compare_with_region(user):
         'region_category_avg': list(region_category_avg),
         'region': user_location
     }
+
+    # country_code = user_location.get("country_code") or user_location.get("country")
+    # if country_code:
+    #     country_savings_rate = get_country_indicator(country_code[:3].upper()).get("value")
+    #     comparison["region_savings_rate"] = country_savings_rate
 
     return comparison
 
@@ -124,8 +147,17 @@ def generate_insights(personal_data, comparison_data=None):
         elif personal_data['total_expense'] < comparison_data['region_avg_expense'] * 0.8:
             insights.append("✅ You're spending less than average — efficient budgeting!")
 
+    if comparison_data and comparison_data.get("region_savings_rate"):
+        national_savings = comparison_data["region_savings_rate"]
+        if national_savings:
+            user_vs_national = personal_data["savings_rate"] - national_savings
+            if user_vs_national > 0:
+                insights.append(f" Your personal savings rate ({personal_data['savings_rate']}%) is above the national average ({national_savings:.1f}%). Great job!")
+            else:
+                insights.append(f" Your savings rate ({personal_data['savings_rate']}%) is below the national average ({national_savings:.1f}%). Try increasing your monthly savings.")
+
     for goal in personal_data['goal_progress']:
-        if goal['progress'] >= 90:
+        if goal['progress'] >= 90 and goal["progress"] < 100:
             insights.append(f"🎯 You're about to reach your goal: {goal['title']}!")
         elif goal['progress'] < 25:
             insights.append(f"🚀 You're just starting on {goal['title']} — stay consistent!")
