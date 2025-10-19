@@ -1,100 +1,127 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-md mx-auto mt-10 bg-white shadow-lg rounded-xl p-6">
-  <h2 class="text-2xl font-semibold text-center mb-6">Create Your Account</h2>
+<div class="flex flex-col md:flex-row h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white overflow-hidden">
 
-  <form id="registerForm" method="POST">
-    {% csrf_token %}
-    <div class="mb-4">
-      <label for="username" class="block text-gray-700">Username</label>
-      <input type="text" id="username" name="username" class="w-full border rounded-lg px-3 py-2" required>
+  <div class="hidden md:flex flex-col justify-center items-start w-1/2 px-16 animate-fade-in-left">
+    <h1 class="text-5xl font-extrabold mb-4 tracking-tight drop-shadow-lg">Join FinWise</h1>
+    <p class="text-lg mb-6 max-w-md text-gray-100 leading-relaxed">
+      Take control of your finances through community learning and powerful insights.
+    </p>
+    <p class="italic text-sm opacity-90">
+      “Start your journey to financial confidence today.”
+    </p>
+  </div>
+
+  <div class="flex justify-center items-center w-full md:w-1/2 animate-fade-in-up p-6">
+    <div class="backdrop-blur-lg bg-white/20 p-8 rounded-2xl shadow-2xl w-80 sm:w-96 text-white border border-white/30">
+      <h2 class="text-3xl font-semibold mb-2 text-center">Create Your Account</h2>
+      <p class="text-center text-gray-200 mb-6">Join the FinWise community today</p>
+
+      <form id="registerForm" method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="username" class="block text-sm font-medium text-gray-100 mb-1">Username</label>
+          <input type="text" id="username" name="username" class="w-full bg-white/20 text-white border border-white/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-200" placeholder="Enter your username" required>
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-100 mb-1">Email</label>
+          <input type="email" id="email" name="email" class="w-full bg-white/20 text-white border border-white/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-200" placeholder="you@example.com" required>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-100 mb-1">Password</label>
+          <input type="password" id="password" name="password" class="w-full bg-white/20 text-white border border-white/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-200" placeholder="Create a strong password" required>
+        </div>
+
+        <div>
+          <label for="password2" class="block text-sm font-medium text-gray-100 mb-1">Confirm Password</label>
+          <input type="password" id="password2" name="password2" class="w-full bg-white/20 text-white border border-white/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-200" placeholder="Re-enter password" required>
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2.5 rounded-lg font-medium hover:opacity-90 transition-all shadow-lg">
+          Register
+        </button>
+      </form>
+
+      <div id="message" class="mt-4 text-center text-sm"></div>
+
+      <p class="mt-4 text-center text-sm text-gray-200">
+        Already have an account?
+        <a href="{% url 'login_page' %}" class="text-white font-semibold hover:underline">Login here</a>
+      </p>
     </div>
-
-    <div class="mb-4">
-      <label for="email" class="block text-gray-700">Email</label>
-      <input type="email" id="email" name="email" class="w-full border rounded-lg px-3 py-2" required>
-    </div>
-
-    <div class="mb-4">
-      <label for="password" class="block text-gray-700">Password</label>
-      <input type="password" id="password" name="password" class="w-full border rounded-lg px-3 py-2" required>
-    </div>
-
-    <div class="mb-6">
-      <label for="password2" class="block text-gray-700">Confirm Password</label>
-      <input type="password" id="password2" name="password2" class="w-full border rounded-lg px-3 py-2" required>
-    </div>
-
-    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
-      Register
-    </button>
-  </form>
-
-  <p class="text-center mt-4 text-sm">
-    Already have an account?
-    <a href="{% url 'login_page' %}" class="text-blue-500 hover:underline">Login here</a>
-  </p>
-
-  <div id="message" class="mt-4 text-center text-sm"></div>
+  </div>
 </div>
+
+<style>
+@keyframes fade-in-left {
+  0% { opacity: 0; transform: translateX(-40px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-left { animation: fade-in-left 1s ease forwards; }
+.animate-fade-in-up { animation: fade-in-up 1s ease forwards; }
+</style>
 
 <script>
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const username = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const password2 = document.getElementById('password2').value;
-    const messageDiv = document.getElementById('message');
+  const username = document.getElementById('username').value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+  const messageDiv = document.getElementById('message');
 
-    if (password !== password2) {
-        messageDiv.textContent = "Passwords do not match!";
-        messageDiv.className = "text-red-500 text-center mt-4";
-        return;
+  if (password !== password2) {
+    messageDiv.textContent = "Passwords do not match!";
+    messageDiv.className = "text-red-300 text-center mt-4";
+    return;
+  }
+
+  messageDiv.textContent = "Registering... Please wait.";
+  messageDiv.className = "text-gray-200 text-center mt-4";
+
+  try {
+    const locResponse = await fetch("https://ipwho.is/");
+    const locData = await locResponse.json();
+
+    const location = {
+      city: locData.city,
+      region: locData.region,
+      country: locData.country,
+      latitude: locData.latitude,
+      longitude: locData.longitude,
+      ip: locData.ip
+    };
+
+    const response = await fetch('/api/auth/register/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ username, email, password, password2, location })
+    });
+
+    if (response.ok) {
+      messageDiv.textContent = "Registration successful! You can now log in.";
+      messageDiv.className = "text-green-300 text-center mt-4";
+      document.getElementById('registerForm').reset();
+    } else {
+      const data = await response.json();
+      messageDiv.textContent = data.detail || "Error: " + JSON.stringify(data);
+      messageDiv.className = "text-red-300 text-center mt-4";
     }
-
-    messageDiv.textContent = "Registering... Please wait.";
-    messageDiv.className = "text-gray-600 text-center mt-4";
-
-    try {
-        const locResponse = await fetch("https://ipwho.is/");
-        const locData = await locResponse.json();
-
-        console.log(locData)
-
-        const location = {
-            city: locData.city,
-            region: locData.region,
-            country: locData.country,
-            latitude: locData.latitude,
-            longitude: locData.longitude,
-            ip: locData.ip
-        };
-
-        const response = await fetch('/api/auth/register/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ username, email, password, password2, location })
-        });
-
-        if (response.ok) {
-            messageDiv.textContent = "Registration successful! You can now login.";
-            messageDiv.className = "text-green-600 text-center mt-4";
-            document.getElementById('registerForm').reset();
-        } else {
-            const data = await response.json();
-            messageDiv.textContent = data.detail || "Error: " + JSON.stringify(data);
-            messageDiv.className = "text-red-500 text-center mt-4";
-        }
-    } catch (error) {
-        messageDiv.textContent = "Network or location error.";
-        messageDiv.className = "text-red-500 text-center mt-4";
-    }
+  } catch (error) {
+    messageDiv.textContent = "Network or location error.";
+    messageDiv.className = "text-red-300 text-center mt-4";
+  }
 });
 </script>
 {% endblock %}

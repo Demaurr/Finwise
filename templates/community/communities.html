@@ -3,7 +3,6 @@
 
 {% block content %}
 <div class="flex flex-col md:flex-row items-start min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-  <!-- Mobile top bar -->
   <div class="w-full md:hidden bg-white shadow p-4 flex justify-between items-center border-b border-gray-200">
     <h2 class="text-xl font-semibold text-gray-800">Community</h2>
     <button id="menuToggle" class="p-2 rounded-lg border border-gray-300 hover:bg-gray-100">
@@ -13,7 +12,6 @@
 
   <aside id="sidebar"
        class="w-64 bg-white shadow-md p-6 border-r border-gray-200 self-start md:block hidden h-auto md:sticky md:top-4 rounded-xl">
-    <h2 class="text-xl font-semibold text-gray-800 mb-6">Community</h2>
     <nav class="space-y-3">
       <button id="showAllBtn"
         class="sidebar-btn w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 transition text-gray-700 font-medium active">
@@ -75,10 +73,8 @@
       </div>
     </div>
 
-    <!-- Posts Feed -->
     <div id="communityFeed" class="space-y-6"></div>
 
-    <!-- Pagination -->
     <div id="paginationControls" class="flex justify-center items-center gap-3 mt-8"></div>
   </main>
 </div>
