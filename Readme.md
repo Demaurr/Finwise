@@ -5,6 +5,13 @@ It combines **financial tracking tools** with a **social community space**, empo
 
 ---
 
+## 📸 Screenshots Overview
+
+![Login](static/images/screenshots/login.jpg)
+![Dashboard](static/images/screenshots/dashboard.jpg)
+![Community](static/images/screenshots/community_space.jpg)
+---
+
 ## Features
 
 ### Core Financial Tools
@@ -55,23 +62,22 @@ It combines **financial tracking tools** with a **social community space**, empo
 |-------|-------------|
 | **Backend** | Django + Django REST Framework |
 | **Frontend** | HTML, JavaScript, TailwindCSS |
-| **Database** | SQLite / PostgreSQL |
+| **Database** | PostgreSQL |
 | **Serialization** | DRF Serializers (for Goals, Transactions, Posts, Comments) |
 | **Charts** | Chart.js for dynamic data visualization |
 | **Auth** | Django built-in authentication system |
 
 ---
 
-
 ## Key Features Implemented So Far
 
-✅ Financial goals with progress tracking  
-✅ Transaction CRUD with categorization  
-✅ Beautiful dashboard with visual charts  
-✅ Community posts, likes, and comments  
-✅ Responsive TailwindCSS frontend  
-✅ Authentication & user sessions  
-✅ Modern, connected UI between dashboard and community  
+- ✔️ Financial goals with progress tracking  
+- ✔️ Transaction CRUD with categorization  
+- ✔️ Beautiful dashboard with visual charts  
+- ✔️ Community posts, likes, and comments  
+- ✔️ Responsive TailwindCSS frontend  
+- ✔️ Authentication & user sessions  
+- ✔️ Modern, connected UI between dashboard and community  
 
 ---
 
