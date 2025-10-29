@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow text-center">
+      <p class="text-gray-500 text-sm">Total Users</p>
+      <h2 class="text-3xl font-bold text-blue-600">{{ total_users }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow text-center">
+      <p class="text-gray-500 text-sm">Total Posts</p>
+      <h2 class="text-3xl font-bold text-green-600">{{ total_posts }}</h2>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <div class="bg-white rounded-2xl shadow p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">User Growth</h3>
+        <div class="flex gap-2">
+          <button onclick="updateUserChart('1D', event)" class="time-btn user-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-blue-100 transition-colors">1D</button>
+          <button onclick="updateUserChart('1W', event)" class="time-btn user-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-blue-100 transition-colors">1W</button>
+          <button onclick="updateUserChart('1M', event)" class="time-btn user-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-blue-100 transition-colors">1M</button>
+          <button onclick="updateUserChart('6M', event)" class="time-btn user-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-blue-600 text-white">6M</button>
+          <button onclick="updateUserChart('1Y', event)" class="time-btn user-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-blue-100 transition-colors">1Y</button>
+        </div>
+      </div>
+      <canvas id="userGrowthChart"></canvas>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Post Activity</h3>
+        <div class="flex gap-2">
+          <button onclick="updatePostChart('1D', event)" class="time-btn post-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-green-100 transition-colors">1D</button>
+          <button onclick="updatePostChart('1W', event)" class="time-btn post-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-green-100 transition-colors">1W</button>
+          <button onclick="updatePostChart('1M', event)" class="time-btn post-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-green-100 transition-colors">1M</button>
+          <button onclick="updatePostChart('6M', event)" class="time-btn post-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-green-600 text-white">6M</button>
+          <button onclick="updatePostChart('1Y', event)" class="time-btn post-time-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 hover:bg-green-100 transition-colors">1Y</button>
+        </div>
+      </div>
+      <canvas id="postActivityChart"></canvas>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl shadow mb-8">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Users</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="bg-gray-100 text-gray-600 text-left">
+            <th class="p-3">Username</th>
+            <th class="p-3">Email</th>
+            <th class="p-3">Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in recent_users %}
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-3 font-medium">{{ user.username }}</td>
+            <td class="p-3">{{ user.email }}</td>
+            <td class="p-3">{{ user.date_joined|date:"Y-m-d" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="p-3 text-gray-500 text-center">No recent users.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl shadow">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Posts</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="bg-gray-100 text-gray-600 text-left">
+            <th class="p-3">Title</th>
+            <th class="p-3">Author</th>
+            <th class="p-3">Created</th>
+            <th class="p-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in recent_posts %}
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-3 font-medium">{{ post.content|truncatechars:20 }}</td>
+            <td class="p-3">{{ post.author.username }}</td>
+            <td class="p-3">{{ post.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="p-3 text-center">
+              <form method="post" action="{% url 'delete_post' post.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="p-3 text-gray-500 text-center">No recent posts.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const userTrends = JSON.parse('{{ user_trends|escapejs }}');
+const postTrends = JSON.parse('{{ post_trends|escapejs }}');
+
+let currentUserPeriod = '6M';
+let currentPostPeriod = '6M';
+
+let userChart = new Chart(document.getElementById('userGrowthChart'), {
+  type: 'line',
+  data: {
+    labels: Object.keys(userTrends[currentUserPeriod]),
+    datasets: [{
+      label: 'New Users',
+      data: Object.values(userTrends[currentUserPeriod]),
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.2)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { color: '#555' } }, y: { beginAtZero: true } }
+  }
+});
+
+let postChart = new Chart(document.getElementById('postActivityChart'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(postTrends[currentPostPeriod]),
+    datasets: [{
+      label: 'Posts Created',
+      data: Object.values(postTrends[currentPostPeriod]),
+      backgroundColor: 'rgba(34,197,94,0.6)',
+      borderColor: '#22c55e',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { color: '#555' } }, y: { beginAtZero: true } }
+  }
+});
+
+function updateUserChart(period, event) {
+  currentUserPeriod = period;
+  document.querySelectorAll('.user-time-btn').forEach(btn => {
+    btn.classList.remove('bg-blue-600', 'text-white');
+    btn.classList.add('bg-gray-100');
+  });
+  event.target.classList.remove('bg-gray-100');
+  event.target.classList.add('bg-blue-600', 'text-white');
+
+  const trend = userTrends[period];
+  userChart.data.labels = Object.keys(trend);
+  userChart.data.datasets[0].data = Object.values(trend);
+  userChart.update();
+}
+
+function updatePostChart(period, event) {
+  currentPostPeriod = period;
+  document.querySelectorAll('.post-time-btn').forEach(btn => {
+    btn.classList.remove('bg-green-600', 'text-white');
+    btn.classList.add('bg-gray-100');
+  });
+  event.target.classList.remove('bg-gray-100');
+  event.target.classList.add('bg-green-600', 'text-white');
+
+  const trend = postTrends[period];
+  postChart.data.labels = Object.keys(trend);
+  postChart.data.datasets[0].data = Object.values(trend);
+  postChart.update();
+}
+</script>
+{% endblock %}
